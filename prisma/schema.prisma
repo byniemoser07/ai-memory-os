@@ -1,0 +1,41 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+model Entity {
+  id        String   @id @default(cuid())
+  name      String
+  type      String
+  createdAt DateTime @default(now())
+
+  outgoing  Relation[] @relation("SourceEntity")
+  incoming  Relation[] @relation("TargetEntity")
+
+  @@index([name, type])
+}
+
+model Relation {
+  id           String    @id @default(cuid())
+  sourceId     String
+  targetId     String
+  relationType String
+  confidence   Float     @default(1.0)
+  validFrom    DateTime  @default(now())
+  validTo      DateTime?
+  supersedesId String?
+  sourceText   String?
+
+  source Entity @relation("SourceEntity", fields: [sourceId], references: [id])
+  target Entity @relation("TargetEntity", fields: [targetId], references: [id])
+
+  @@index([sourceId, relationType, validTo])
+}
